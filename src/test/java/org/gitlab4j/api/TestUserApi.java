@@ -1,12 +1,12 @@
 package org.gitlab4j.api;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
@@ -57,12 +57,12 @@ public class TestUserApi extends AbstractIntegrationTest {
     private static final String TEST_SUDO_AS_USERNAME = HelperUtils.getProperty(SUDO_AS_USERNAME_KEY);
 
     private static final String TEST_IMPERSONATION_TOKEN_NAME = "token1";
-    private static final String TEST_SSH_KEY =
-            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCvbkmGRaANy2nmLrfYa9LkjMqjs9twYZXQKUPK18j" +
-            "BWmNgnAm818IikxjfFit3Gqnnh9zdNzlzUYs2osmfdHwRLeFY3hKVR6WckGYVroQuV5ArUA4+oME+IIQ2soCv/" +
-            "vNWfEmp2N1mpBTwi2mIYKurCKv6UpIpGK9D+ezNk5H0waVTK8EvZ/ey69Nu7C7RsbTYeyi5WY/jaUG5JbsEeKY" +
-            "IW/2DIlUts7gcB2hzXtt7r7+6DLx82Vb+S2jPZu2JQaB4zfgS7LQgzHUy1aAAgUUpuAbvWzuGHKO0p551Ru4qi" +
-            "tyXN2+OUVXcYAsuIIdGGB0wLvTDgiOOSZWnSE+sg6XX user@example.com";
+    private static final String TEST_SSH_KEY = 
+	"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3rWzl/oPAD+Em2iGTmR81HcYZsopvnKp7jelI4XS91fT1NjCRrGsxf5Mw/" +
+        "KnmtBjhk+kQjkhIrnsBDcs6DZWtNcHJtyWJZrYsfxMTqWCaQv+OTRwVboqS2pmPcbK3gizUd5GCLFTKbg4OMpdywTwi6NAPwQ" +
+	"rtn3xwiVnGGCfBSyRFppcYP81otALctrlAW57V5+bQwFIJteJ+NWe1UmPxrqQ0N/a+dEEoJHzwX8RtVSkULafrRw8avn6Zp2x" +
+        "1OlD2aIEMQWvepNTRW6UDMSmWFc61ycy1pF5sCT5rij+b/fN4qCEvQs6R7GmCzaaZzbWuAqaxLRdITm/WUxdG6rjh";
+
     private static final String TEST_USER_EMAIL = "test-user-email123@gitlab4j.org";
 
     private static final String TEST_EXTERNAL_USERNAME = HelperUtils.getProperty(EXTERNAL_USERNAME_KEY);
@@ -114,7 +114,7 @@ public class TestUserApi extends AbstractIntegrationTest {
                         List<SshKey> sshKeys = gitLabApi.getUserApi().getSshKeys();
                         if (sshKeys != null) {
                             for (SshKey key : sshKeys) {
-                                if (TEST_SSH_KEY.equals(key.getKey())) {
+                                if (key.getKey().startsWith(TEST_SSH_KEY)) {
                                     gitLabApi.getUserApi().deleteSshKey(key.getId());
                                 }
                             }
@@ -283,7 +283,7 @@ public class TestUserApi extends AbstractIntegrationTest {
             assertEquals(TEST_IMPERSONATION_TOKEN_NAME, token.getName());
             assertEquals(expiresAt.getTime(), token.getExpiresAt().getTime());
             assertEquals(scopes.length, token.getScopes().size());
-            assertThat(token.getScopes(), containsInAnyOrder(scopes));
+            assertThat(token.getScopes(), contains(scopes));
 
         } finally {
             if (user != null && token != null) {
@@ -367,14 +367,19 @@ public class TestUserApi extends AbstractIntegrationTest {
         assumeTrue(TEST_SSH_KEY != null);
         SshKey sshKey = gitLabApi.getUserApi().addSshKey("Test-Key", TEST_SSH_KEY);
         assertNotNull(sshKey);
-        assertEquals(TEST_SSH_KEY, sshKey.getKey());
+        assertTrue(TEST_SSH_KEY, sshKey.getKey().startsWith(TEST_SSH_KEY));
         gitLabApi.getUserApi().deleteSshKey(sshKey.getId());
 
         User user = gitLabApi.getUserApi().getCurrentUser();
         sshKey = gitLabApi.getUserApi().addSshKey(user.getId(), "Test-Key1", TEST_SSH_KEY);
         assertNotNull(sshKey);
-        assertEquals(TEST_SSH_KEY, sshKey.getKey());
+        assertTrue(TEST_SSH_KEY, sshKey.getKey().startsWith(TEST_SSH_KEY));
         assertEquals(user.getId(), sshKey.getUserId());
+
+        Optional<SshKey> optional = gitLabApi.getUserApi().getOptionalSshKey(sshKey.getId());
+        assertNotNull(optional.isPresent());
+        assertTrue(TEST_SSH_KEY, sshKey.getKey().startsWith(TEST_SSH_KEY));
+
         gitLabApi.getUserApi().deleteSshKey(sshKey.getId());
     }
 
@@ -383,7 +388,7 @@ public class TestUserApi extends AbstractIntegrationTest {
 
         assumeTrue(TEST_SSH_KEY != null);
         User user = gitLabApi.getUserApi().getCurrentUser();
-        SshKey sshKey = gitLabApi.getUserApi().addSshKey(user.getId(), "Test-Key1", TEST_SSH_KEY);
+        SshKey sshKey = gitLabApi.getUserApi().addSshKey(user.getId(), "Test-Key2", TEST_SSH_KEY);
         assertNotNull(sshKey);
 
         Optional<SshKey> optional = gitLabApi.getUserApi().getOptionalSshKey(sshKey.getId());

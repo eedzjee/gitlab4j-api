@@ -4,11 +4,15 @@ package org.gitlab4j.api.models;
 import java.util.Date;
 import java.util.List;
 
+import org.gitlab4j.api.ProjectLicense;
 import org.gitlab4j.api.utils.JacksonJson;
 import org.gitlab4j.api.utils.JacksonJsonEnumHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import org.gitlab4j.api.Constants.BuildGitStrategy;
 
 public class Project {
 
@@ -85,6 +89,14 @@ public class Project {
     private Boolean initializeWithReadme;
     private Boolean packagesEnabled;
     private Boolean emptyRepo;
+    private String licenseUrl;
+    private ProjectLicense license;
+    private List<CustomAttribute> customAttributes;
+    private String buildCoverageRegex;
+    private BuildGitStrategy buildGitStrategy;
+
+    @JsonSerialize(using = JacksonJson.DateOnlySerializer.class)
+    private Date markedForDeletionOn;
 
     public Integer getApprovalsBeforeMerge() {
         return approvalsBeforeMerge;
@@ -647,6 +659,38 @@ public class Project {
         this.emptyRepo = emptyRepo;
     }
 
+    public Date getMarkedForDeletionOn() {
+        return markedForDeletionOn;
+    }
+
+    public void setMarkedForDeletionOn(Date markedForDeletionOn) {
+        this.markedForDeletionOn = markedForDeletionOn;
+    }
+
+    public String getLicenseUrl() {
+        return licenseUrl;
+    }
+
+    public void setLicenseUrl(String licenseUrl) {
+        this.licenseUrl = licenseUrl;
+    }
+
+    public ProjectLicense getLicense() {
+        return license;
+    }
+
+    public void setLicense(ProjectLicense license) {
+        this.license = license;
+    }
+
+    public List<CustomAttribute> getCustomAttributes() {
+        return customAttributes;
+    }
+
+    public void setCustomAttributes(List<CustomAttribute> customAttributes) {
+        this.customAttributes = customAttributes;
+    }
+
     public static final boolean isValid(Project project) {
         return (project != null && project.getId() != null);
     }
@@ -665,5 +709,31 @@ public class Project {
      */
     public static final String getPathWithNammespace(String namespace, String path) {
         return (namespace.trim() + "/" + path.trim());
+    }
+
+    public String getBuildCoverageRegex() {
+        return buildCoverageRegex;
+    }
+
+    public void setBuildCoverageRegex(String buildCoverageRegex) {
+        this.buildCoverageRegex = buildCoverageRegex;
+    }
+
+    public Project withBuildCoverageRegex(String buildCoverageRegex) {
+        this.buildCoverageRegex = buildCoverageRegex;
+        return this;
+    }
+
+    public BuildGitStrategy getBuildGitStrategy() {
+        return buildGitStrategy;
+    }
+
+    public void setBuildGitStrategy(BuildGitStrategy buildGitStrategy) {
+        this.buildGitStrategy = buildGitStrategy;
+    }
+
+    public Project withBuildGitStrategy(BuildGitStrategy buildGitStrategy) {
+        this.buildGitStrategy = buildGitStrategy;
+        return this;
     }
 }

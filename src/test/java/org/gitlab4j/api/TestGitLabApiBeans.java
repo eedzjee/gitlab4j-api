@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2017 Greg Messner <greg@messners.com>
+ * Copyright (c) 2017-2020 Greg Messner <greg@messners.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software.json"), to deal in
@@ -37,9 +37,12 @@ import org.gitlab4j.api.models.AccessRequest;
 import org.gitlab4j.api.models.Application;
 import org.gitlab4j.api.models.ApplicationSettings;
 import org.gitlab4j.api.models.ApprovalRule;
+import org.gitlab4j.api.models.ApprovalState;
 import org.gitlab4j.api.models.ArtifactsFile;
+import org.gitlab4j.api.models.AuditEvent;
 import org.gitlab4j.api.models.AwardEmoji;
 import org.gitlab4j.api.models.Badge;
+import org.gitlab4j.api.models.Blame;
 import org.gitlab4j.api.models.Board;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Comment;
@@ -49,6 +52,7 @@ import org.gitlab4j.api.models.CommitStatus;
 import org.gitlab4j.api.models.CompareResults;
 import org.gitlab4j.api.models.Contributor;
 import org.gitlab4j.api.models.DeployKey;
+import org.gitlab4j.api.models.DeployToken;
 import org.gitlab4j.api.models.Deployment;
 import org.gitlab4j.api.models.Diff;
 import org.gitlab4j.api.models.Discussion;
@@ -73,6 +77,7 @@ import org.gitlab4j.api.models.Label;
 import org.gitlab4j.api.models.LabelEvent;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestDiff;
 import org.gitlab4j.api.models.Milestone;
 import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.NotificationSettings;
@@ -91,6 +96,7 @@ import org.gitlab4j.api.models.ProtectedTag;
 import org.gitlab4j.api.models.PushRules;
 import org.gitlab4j.api.models.RegistryRepository;
 import org.gitlab4j.api.models.Release;
+import org.gitlab4j.api.models.RemoteMirror;
 import org.gitlab4j.api.models.RepositoryFile;
 import org.gitlab4j.api.models.Runner;
 import org.gitlab4j.api.models.RunnerDetail;
@@ -125,6 +131,12 @@ public class TestGitLabApiBeans {
     }
 
     @Test
+    public void testAuditEvent() throws Exception {
+        List<AuditEvent> auditEvents = unmarshalResourceList(AuditEvent.class, "audit-events.json");
+        assertTrue(compareJson(auditEvents, "audit-events.json"));
+    }
+
+    @Test
     public void testAwardEmoji() throws Exception {
         AwardEmoji awardEmoji = unmarshalResource(AwardEmoji.class, "award-emoji.json");
         assertTrue(compareJson(awardEmoji, "award-emoji.json"));
@@ -134,6 +146,12 @@ public class TestGitLabApiBeans {
     public void testBadges() throws Exception {
         List<Badge> badges = unmarshalResourceList(Badge.class, "badges.json");
         assertTrue(compareJson(badges, "badges.json"));
+    }
+
+    @Test
+    public void testBlame() throws Exception {
+        List<Blame> blame = unmarshalResourceList(Blame.class, "blame.json");
+        assertTrue(compareJson(blame, "blame.json"));
     }
 
     @Test
@@ -201,6 +219,12 @@ public class TestGitLabApiBeans {
     }
 
     @Test
+    public void testDeployTokens() throws Exception {
+        List<DeployToken> deployTokens = unmarshalResourceList(DeployToken.class, "deploy-tokens.json");
+        assertTrue(compareJson(deployTokens, "deploy-tokens.json"));
+    }
+
+    @Test
     public void testEmails() throws Exception {
         List<Email> emails = unmarshalResourceList(Email.class, "emails.json");
         assertTrue(compareJson(emails, "emails.json"));
@@ -228,6 +252,12 @@ public class TestGitLabApiBeans {
     public void testEvent() throws Exception {
         Event event = unmarshalResource(Event.class, "event.json");
         assertTrue(compareJson(event, "event.json"));
+    }
+
+    @Test
+    public void testEvents() throws Exception {
+        List<Event> events = unmarshalResourceList(Event.class, "events.json");
+        assertTrue(compareJson(events, "events.json"));
     }
 
     @Test
@@ -294,6 +324,12 @@ public class TestGitLabApiBeans {
     public void testIssueLink() throws Exception {
         IssueLink issueLink = unmarshalResource(IssueLink.class, "issue-link.json");
         assertTrue(compareJson(issueLink, "issue-link.json"));
+    }
+
+    @Test
+    public void testIssuesClosedBy() throws Exception {
+        List<Issue> issues = unmarshalResourceList(Issue.class, "issues-closed-by-mr.json");
+        assertTrue(compareJson(issues, "issues-closed-by-mr.json"));
     }
 
     @Test
@@ -459,6 +495,12 @@ public class TestGitLabApiBeans {
     }
 
     @Test
+    public void testRemoteMirror() throws Exception {
+	RemoteMirror remoteMirror = unmarshalResource(RemoteMirror.class, "remote-mirror.json");
+        assertTrue(compareJson(remoteMirror, "remote-mirror.json"));
+    }
+
+    @Test
     public void testRepositoryFile() throws Exception {
         RepositoryFile file = unmarshalResource(RepositoryFile.class, "repository-file.json");
         assertTrue(compareJson(file, "repository-file.json"));
@@ -508,6 +550,12 @@ public class TestGitLabApiBeans {
     }
 
     @Test
+    public void testMergeRequestApprovalState() throws Exception {
+        ApprovalState approvalState = unmarshalResource(ApprovalState.class, "approval-state.json");
+        assertTrue(compareJson(approvalState, "approval-state.json"));
+    }
+
+    @Test
     public void testMergeRequestApprovalRule() throws Exception {
 	ApprovalRule approvalRule = unmarshalResource(ApprovalRule.class, "approval-rule.json");
         assertTrue(compareJson(approvalRule, "approval-rule.json"));
@@ -517,6 +565,18 @@ public class TestGitLabApiBeans {
     public void testMergeRequest() throws Exception {
         MergeRequest mergeRequest = unmarshalResource(MergeRequest.class, "merge-request.json");
         assertTrue(compareJson(mergeRequest, "merge-request.json"));
+    }
+
+    @Test
+    public void testMergeRequestDiff() throws Exception {
+        MergeRequestDiff diff = unmarshalResource(MergeRequestDiff.class, "merge-request-diff.json");
+        assertTrue(compareJson(diff, "merge-request-diff.json"));
+    }
+
+    @Test
+    public void testMergeRequestDiffs() throws Exception {
+        List<MergeRequestDiff> diffs = unmarshalResourceList(MergeRequestDiff.class, "merge-request-diffs.json");
+        assertTrue(compareJson(diffs, "merge-request-diffs.json"));
     }
 
     @Test

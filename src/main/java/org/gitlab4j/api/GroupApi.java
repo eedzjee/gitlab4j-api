@@ -1,5 +1,6 @@
 package org.gitlab4j.api;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import javax.ws.rs.core.Response;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.AccessRequest;
+import org.gitlab4j.api.models.AuditEvent;
 import org.gitlab4j.api.models.Badge;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupFilter;
@@ -21,6 +23,7 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Variable;
 import org.gitlab4j.api.models.Visibility;
+import org.gitlab4j.api.utils.ISO8601;
 
 /**
  * This class implements the client side API for the GitLab groups calls.
@@ -28,6 +31,7 @@ import org.gitlab4j.api.models.Visibility;
  * @see <a href="https://docs.gitlab.com/ce/api/members.html">Group and project members API at GitLab</a>
  * @see <a href="https://docs.gitlab.com/ce/api/access_requests.html">Group and project access requests API</a>
  * @see <a href="https://docs.gitlab.com/ce/api/group_badges.html">Group badges API</a>
+ * @see <a href="https://docs.gitlab.com/ee/api/audit_events.html#retrieve-all-group-audit-events">Group audit events API</a>
  */
 public class GroupApi extends AbstractApi {
 
@@ -777,9 +781,7 @@ public class GroupApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Member getMember(Object groupIdOrPath, int userId) throws GitLabApiException {
-        Response response = get(Response.Status.OK, getDefaultPerPageParam(),
-                "groups", getGroupIdOrPath(groupIdOrPath), "members", userId);
-        return (response.readEntity(new GenericType<Member>() {}));
+	return (getMember(groupIdOrPath, userId, false));
     }
 
     /**
@@ -793,7 +795,46 @@ public class GroupApi extends AbstractApi {
      */
     public Optional<Member> getOptionalMember(Object groupIdOrPath, int userId) {
         try {
-            return (Optional.ofNullable(getMember(groupIdOrPath, userId)));
+            return (Optional.ofNullable(getMember(groupIdOrPath, userId, false)));
+        } catch (GitLabApiException glae) {
+            return (GitLabApi.createOptionalFromException(glae));
+        }
+    }
+
+    /**
+     * Gets a group team member, optionally including inherited member.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/members/all/:user_id</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param userId the user ID of the member
+     * @param includeInherited if true will the member even if inherited thru an ancestor group
+     * @return the member specified by the project ID/user ID pair
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Member getMember(Object groupIdOrPath, Integer userId, Boolean includeInherited) throws GitLabApiException {
+        Response response;
+        if (includeInherited) {
+            response = get(Response.Status.OK, null, "groups", getGroupIdOrPath(groupIdOrPath), "members", "all", userId);
+        } else {
+            response = get(Response.Status.OK, null, "groups", getGroupIdOrPath(groupIdOrPath), "members", userId);
+        }
+        return (response.readEntity(Member.class));
+    }
+
+    /**
+     * Gets a group team member, optionally including inherited member.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/members/all/:user_id</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param userId the user ID of the member
+     * @param includeInherited if true will the member even if inherited thru an ancestor group
+     * @return the member specified by the group ID/user ID pair as the value of an Optional
+     */
+    public Optional<Member> getOptionalMember(Object groupIdOrPath, Integer userId, Boolean includeInherited)  {
+        try {
+            return (Optional.ofNullable(getMember(groupIdOrPath, userId, includeInherited)));
         } catch (GitLabApiException glae) {
             return (GitLabApi.createOptionalFromException(glae));
         }
@@ -812,7 +853,7 @@ public class GroupApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public List<Member> getAllMembers(Object groupIdOrPath) throws GitLabApiException {
-        return (getAllMembers(groupIdOrPath, getDefaultPerPage()).all());
+        return (getAllMembers(groupIdOrPath, null, null));
     }
 
     /**
@@ -828,7 +869,9 @@ public class GroupApi extends AbstractApi {
      * @return a list of group members viewable by the authenticated user, including inherited members
      * through ancestor groups in the specified page range
      * @throws GitLabApiException if any exception occurs
+     * @deprecated  Will be removed in version 5.0
      */
+    @Deprecated
     public List<Member> getAllMembers(Object groupIdOrPath, int page, int perPage) throws GitLabApiException {
         Response response = get(Response.Status.OK, getPageQueryParams(page, perPage),
                 "groups", getGroupIdOrPath(groupIdOrPath), "members", "all");
@@ -849,7 +892,7 @@ public class GroupApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Pager<Member> getAllMembers(Object groupIdOrPath, int itemsPerPage) throws GitLabApiException {
-        return (new Pager<Member>(this, Member.class, itemsPerPage, null, "groups", getGroupIdOrPath(groupIdOrPath), "members", "all"));
+        return (getAllMembers(groupIdOrPath, null, null, itemsPerPage));
     }
 
     /**
@@ -865,7 +908,64 @@ public class GroupApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Stream<Member> getAllMembersStream(Object groupIdOrPath) throws GitLabApiException {
-        return (getAllMembers(groupIdOrPath, getDefaultPerPage()).stream());
+        return (getAllMembersStream(groupIdOrPath, null, null));
+    }
+
+
+    /**
+     * Gets a list of group members viewable by the authenticated user, including inherited members
+     * through ancestor groups. Returns multiple times the same user (with different member attributes)
+     * when the user is a member of the group and of one or more ancestor group.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/members/all</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param query a query string to search for members
+     * @param userIds filter the results on the given user IDs
+     * @return the group members viewable by the authenticated user, including inherited members through ancestor groups
+     * @throws GitLabApiException if any exception occurs
+     */
+    public List<Member> getAllMembers(Object groupIdOrPath, String query, List<Integer> userIds) throws GitLabApiException {
+        return (getAllMembers(groupIdOrPath, query, userIds, getDefaultPerPage()).all());
+    }
+
+    /**
+     * Gets a Pager of group members viewable by the authenticated user, including inherited members
+     * through ancestor groups. Returns multiple times the same user (with different member attributes)
+     * when the user is a member of the group and of one or more ancestor group.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/members/all</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param query a query string to search for members
+     * @param userIds filter the results on the given user IDs
+     * @param itemsPerPage the number of Project instances that will be fetched per page
+     * @return a Pager of the group members viewable by the authenticated user,
+     * including inherited members through ancestor groups
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Pager<Member> getAllMembers(Object groupIdOrPath, String query, List<Integer> userIds, int itemsPerPage) throws GitLabApiException {
+        GitLabApiForm form = new GitLabApiForm().withParam("query", query).withParam("user_ids", userIds);
+        return (new Pager<Member>(this, Member.class, itemsPerPage, form.asMap(),
+                "groups", getGroupIdOrPath(groupIdOrPath), "members", "all"));
+    }
+
+    /**
+     * Gets a Stream of group members viewable by the authenticated user, including inherited members
+     * through ancestor groups. Returns multiple times the same user (with different member attributes)
+     * when the user is a member of the group and of one or more ancestor group.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/members/all</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param query a query string to search for members
+     * @param userIds filter the results on the given user IDs
+     * @return a Stream of the group members viewable by the authenticated user,
+     * including inherited members through ancestor groups
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Stream<Member> getAllMembersStream(Object groupIdOrPath, String query, List<Integer> userIds) throws GitLabApiException {
+        return (getAllMembers(groupIdOrPath, query, userIds, getDefaultPerPage()).stream());
     }
 
     /**
@@ -1259,13 +1359,78 @@ public class GroupApi extends AbstractApi {
      *
      * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path, required
      * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance, required
-     * @return the transfered Project instance
+     * @return the transferred Project instance
      * @throws GitLabApiException if any exception occurs during execution
      */
     public Project transferProject(Object groupIdOrPath, Object projectIdOrPath) throws GitLabApiException {
         Response response = post(Response.Status.CREATED, (Form)null, "groups",  getGroupIdOrPath(groupIdOrPath),
                 "projects", getProjectIdOrPath(projectIdOrPath));
         return (response.readEntity(Project.class));
+    }
+
+    /**
+     * Get a List of the group audit events viewable by Maintainer or an Owner of the group.
+     *
+     * <pre><code>GET /groups/:id/audit_events</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param created_after Group audit events created on or after the given time.
+     * @param created_before Group audit events created on or before the given time.
+     * @return a List of group Audit events
+     * @throws GitLabApiException if any exception occurs
+     */
+    public List<AuditEvent> getAuditEvents(Object groupIdOrPath, Date created_after, Date created_before) throws GitLabApiException {
+        return (getAuditEvents(groupIdOrPath, created_after, created_before, getDefaultPerPage()).all());
+    }
+
+    /**
+     * Get a Pager of the group audit events viewable by Maintainer or an Owner of the group.
+     *
+     * <pre><code>GET /groups/:id/audit_events</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param created_after Group audit events created on or after the given time.
+     * @param created_before Group audit events created on or before the given time.
+     * @param itemsPerPage the number of Audit Event instances that will be fetched per page
+     * @return a Pager of group Audit events
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Pager<AuditEvent> getAuditEvents(Object groupIdOrPath, Date created_after, Date created_before, int itemsPerPage) throws GitLabApiException {
+        Form form = new GitLabApiForm()
+                .withParam("created_before", ISO8601.toString(created_after, false))
+                .withParam("created_after", ISO8601.toString(created_before, false));
+        return (new Pager<AuditEvent>(this, AuditEvent.class, itemsPerPage, form.asMap(),
+                "groups", getGroupIdOrPath(groupIdOrPath), "audit_events"));
+    }
+
+    /**
+     * Get a Stream of the group audit events viewable by Maintainer or an Owner of the group.
+     *
+     * <pre><code>GET /groups/:id/audit_events</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param created_after Group audit events created on or after the given time.
+     * @param created_before Group audit events created on or before the given time.
+     * @return a Stream of group Audit events
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Stream<AuditEvent> getAuditEventsStream(Object groupIdOrPath, Date created_after, Date created_before) throws GitLabApiException {
+        return (getAuditEvents(groupIdOrPath, created_after, created_before, getDefaultPerPage()).stream());
+    }
+
+    /**
+     * Get a specific audit event of a group.
+     *
+     * <pre><code>GitLab Endpoint: GET /groups/:id/audit_events/:id_audit_event</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param auditEventId the auditEventId, required
+     * @return the group Audit event
+     * @throws GitLabApiException if any exception occurs
+     */
+    public AuditEvent getAuditEvent(Object groupIdOrPath, Integer auditEventId) throws GitLabApiException {
+        Response response = get(Response.Status.OK, null, "groups", getGroupIdOrPath(groupIdOrPath), "audit_events", auditEventId);
+        return (response.readEntity(AuditEvent.class));
     }
 
     /**
@@ -1470,5 +1635,56 @@ public class GroupApi extends AbstractApi {
 		.withParam("image_url", imageUrl, true);
 	Response response = get(Response.Status.OK, formData.asMap(), "groups", getGroupIdOrPath(groupIdOrPath), "badges", "render");
 	return (response.readEntity(Badge.class));
+    }
+
+    /**
+     * Uploads and sets the project avatar for the specified group.
+     *
+     * <pre><code>GitLab Endpoint: PUT /groups/:id</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param avatarFile the File instance of the avatar file to upload
+     * @return the updated Group instance
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Group setGroupAvatar(Object groupIdOrPath, File avatarFile) throws GitLabApiException {
+        Response response = putUpload(Response.Status.OK,
+                "avatar", avatarFile, "groups", getGroupIdOrPath(groupIdOrPath));
+        return (response.readEntity(Group.class));
+    }
+
+    /**
+     * Share group with another group. Returns 200 and the group details on success.
+     *
+     * <pre><code>GitLab Endpoint: POST /groups/:id/share</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param shareWithGroupId the ID of the group to share with, required
+     * @param groupAccess the access level to grant the group, required
+     * @param expiresAt expiration date of the share, optional
+     * @return a Group instance holding the details of the shared group
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Group shareGroup(Object groupIdOrPath, Integer shareWithGroupId, AccessLevel groupAccess, Date expiresAt) throws GitLabApiException {
+	GitLabApiForm formData = new GitLabApiForm()
+		.withParam("group_id", shareWithGroupId, true)
+		.withParam("group_access", groupAccess, true)
+		.withParam("expires_at", expiresAt);
+	Response response = post(Response.Status.OK, formData, "groups", getGroupIdOrPath(groupIdOrPath), "share");
+	return (response.readEntity(Group.class));
+    }
+
+    /**
+     * Unshare the group from another group.
+     *
+     * <pre><code>GitLab Endpoint: DELETE /groups/:id/share/:group_id</code></pre>
+     *
+     * @param groupIdOrPath the group ID, path of the group, or a Group instance holding the group ID or path
+     * @param sharedWithGroupId the ID of the group to unshare with, required
+     * @throws GitLabApiException if any exception occurs
+     */
+    public void unshareGroup(Object groupIdOrPath, Integer sharedWithGroupId) throws GitLabApiException {
+	delete(Response.Status.NO_CONTENT, null,
+	        "groups", getGroupIdOrPath(groupIdOrPath), "share", sharedWithGroupId);
     }
 }

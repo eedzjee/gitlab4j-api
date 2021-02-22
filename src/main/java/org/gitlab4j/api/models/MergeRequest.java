@@ -16,18 +16,24 @@ public class MergeRequest {
     private Assignee assignee;
     private List<Assignee> assignees;
     private Author author;
+    private Boolean blockingDiscussionsResolved;
     private List<Diff> changes;
     private Date closedAt;
     private Participant closedBy;
     private Date createdAt;
     private String description;
     private Boolean discussionLocked;
+    private Integer divergedCommitsCount;
     private Integer downvotes;
     private Boolean forceRemoveSourceBranch;
+    private Boolean hasConflicts;
     private Integer id;
     private Integer iid;
     private List<String> labels;
+    private Date latestBuildFinishedAt;
+    private Date latestBuildStartedAt;
     private String mergeCommitSha;
+    private String squashCommitSha;
     private String mergeStatus;
     private Date mergedAt;
     private Participant mergedBy;
@@ -45,6 +51,7 @@ public class MergeRequest {
     private String targetBranch;
     private Integer targetProjectId;
     private TaskCompletionStatus taskCompletionStatus;
+    private References references;
     private TimeStats timeStats;
     private String title;
     private Date updatedAt;
@@ -111,6 +118,14 @@ public class MergeRequest {
         this.author = author;
     }
 
+    public Boolean getBlockingDiscussionsResolved() {
+        return blockingDiscussionsResolved;
+    }
+
+    public void setBlockingDiscussionsResolved(Boolean blockingDiscussionsResolved) {
+        this.blockingDiscussionsResolved = blockingDiscussionsResolved;
+    }
+
     public List<Diff> getChanges() {
         return changes;
     }
@@ -159,6 +174,14 @@ public class MergeRequest {
         this.discussionLocked = discussionLocked;
     }
 
+    public Integer getDivergedCommitsCount() {
+        return divergedCommitsCount;
+    }
+
+    public void setDivergedCommitsCount(Integer divergedCommitsCount) {
+        this.divergedCommitsCount = divergedCommitsCount;
+    }
+
     public Integer getDownvotes() {
         return downvotes;
     }
@@ -173,6 +196,14 @@ public class MergeRequest {
 
     public void setForceRemoveSourceBranch(Boolean forceRemoveSourceBranch) {
         this.forceRemoveSourceBranch = forceRemoveSourceBranch;
+    }
+
+    public Boolean getHasConflicts() {
+        return hasConflicts;
+    }
+
+    public void setHasConflicts(Boolean hasConflicts) {
+        this.hasConflicts = hasConflicts;
     }
 
     public Integer getId() {
@@ -199,12 +230,36 @@ public class MergeRequest {
         this.labels = labels;
     }
 
+    public Date getLatestBuildFinishedAt() {
+        return latestBuildFinishedAt;
+    }
+
+    public void setLatestBuildFinishedAt(Date latestBuildFinishedAt) {
+        this.latestBuildFinishedAt = latestBuildFinishedAt;
+    }
+
+    public Date getLatestBuildStartedAt() {
+        return latestBuildStartedAt;
+    }
+
+    public void setLatestBuildStartedAt(Date latestBuildStartedAt) {
+        this.latestBuildStartedAt = latestBuildStartedAt;
+    }
+
     public String getMergeCommitSha() {
         return mergeCommitSha;
     }
 
     public void setMergeCommitSha(String mergeCommitSha) {
         this.mergeCommitSha = mergeCommitSha;
+    }
+
+    public String getSquashCommitSha() {
+        return squashCommitSha;
+    }
+
+    public void setSquashCommitSha(String squashCommitSha) {
+        this.squashCommitSha = squashCommitSha;
     }
 
     public String getMergeStatus() {
@@ -341,6 +396,14 @@ public class MergeRequest {
 
     public void setTaskCompletionStatus(TaskCompletionStatus taskCompletionStatus) {
         this.taskCompletionStatus = taskCompletionStatus;
+    }
+
+    public References getReferences() {
+        return references;
+    }
+
+    public void setReferences(References references) {
+        this.references = references;
     }
 
     public TimeStats getTimeStats() {

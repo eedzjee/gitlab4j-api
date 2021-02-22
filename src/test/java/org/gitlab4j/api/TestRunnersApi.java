@@ -35,7 +35,6 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Runner;
 import org.gitlab4j.api.models.Runner.RunnerStatus;
 import org.gitlab4j.api.models.Runner.RunnerType;
-import org.gitlab4j.api.models.RunnerDetail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -75,8 +74,7 @@ public class TestRunnersApi extends AbstractIntegrationTest {
         if (allRunners.size() > 0) {
 
             for (Runner runner : allRunners) {
-                RunnerDetail runnerDetail = gitLabApi.getRunnersApi().getRunnerDetail(runner.getId());
-                gitLabApi.getRunnersApi().deleteRunner(runnerDetail.getToken());
+                gitLabApi.getRunnersApi().removeRunner(runner.getId());
             }
 
             allRunners = gitLabApi.getRunnersApi().getAllRunners();
@@ -106,8 +104,7 @@ public class TestRunnersApi extends AbstractIntegrationTest {
         List<Runner> allRunners = gitLabApi.getRunnersApi().getAllRunners();
 
         for (Runner runner : allRunners) {
-            RunnerDetail runnerDetail = gitLabApi.getRunnersApi().getRunnerDetail(runner.getId());
-            gitLabApi.getRunnersApi().deleteRunner(runnerDetail.getToken());
+            gitLabApi.getRunnersApi().removeRunner(runner.getId());
         }
     }
 
@@ -124,7 +121,7 @@ public class TestRunnersApi extends AbstractIntegrationTest {
     }
 
     @Test
-    public void shouldDeleteRunner() throws GitLabApiException {
+    public void shouldRemoveRunner() throws GitLabApiException {
 
         for (int i = 0; i < 3; i++) {
             Runner runner = createRunner();
@@ -135,8 +132,7 @@ public class TestRunnersApi extends AbstractIntegrationTest {
         assertEquals(3, allRunners.size());
 
         for (Runner r : allRunners) {
-            RunnerDetail runnerDetail = gitLabApi.getRunnersApi().getRunnerDetail(r.getId());
-            gitLabApi.getRunnersApi().deleteRunner(runnerDetail.getToken());
+            gitLabApi.getRunnersApi().removeRunner(r.getId());
         }
 
         allRunners = gitLabApi.getRunnersApi().getAllRunners();

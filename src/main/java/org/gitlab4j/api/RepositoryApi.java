@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.gitlab4j.api.GitLabApi.ApiVersion;
@@ -23,7 +25,11 @@ import org.gitlab4j.api.models.TreeItem;
 import org.gitlab4j.api.utils.FileUtils;
 
 /**
- * This class provides an entry point to all the GitLab API repository calls.
+ * <p>This class provides an entry point to all the GitLab API repository calls.
+ * For more information on the repository APIs see:</p>
+ *
+ * <a href="https://docs.gitlab.com/ce/api/repositories.html">Repositories API</a>
+ * <a href="https://docs.gitlab.com/ce/api/branches.html">Branches API</a>
  */
 public class RepositoryApi extends AbstractApi {
 
@@ -41,7 +47,7 @@ public class RepositoryApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public List<Branch> getBranches(Object projectIdOrPath) throws GitLabApiException {
-        return (getBranches(projectIdOrPath, getDefaultPerPage()).all());
+        return getBranches(projectIdOrPath, null, getDefaultPerPage()).all();
     }
 
     /**
@@ -73,8 +79,7 @@ public class RepositoryApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Pager<Branch> getBranches(Object projectIdOrPath, int itemsPerPage) throws GitLabApiException {
-        return (new Pager<Branch>(this, Branch.class, itemsPerPage, null, "projects",
-                getProjectIdOrPath(projectIdOrPath), "repository", "branches"));
+        return getBranches(projectIdOrPath, null, itemsPerPage);
     }
 
     /**
@@ -87,7 +92,7 @@ public class RepositoryApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Stream<Branch> getBranchesStream(Object projectIdOrPath) throws GitLabApiException {
-        return (getBranches(projectIdOrPath, getDefaultPerPage()).stream());
+        return getBranches(projectIdOrPath, null, getDefaultPerPage()).stream();
     }
 
     /**
@@ -104,6 +109,55 @@ public class RepositoryApi extends AbstractApi {
         Response response = get(Response.Status.OK, null, "projects",
                 getProjectIdOrPath(projectIdOrPath), "repository", "branches", urlEncode(branchName));
         return (response.readEntity(Branch.class));
+    }
+
+    /**
+     * Get a List of repository branches from a project, sorted by name alphabetically, filter by the search term.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/branches?search=:search</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param search the branch name search term
+     * @return the List of repository branches for the specified project ID and search term
+     * @throws GitLabApiException if any exception occurs
+     */
+    public List<Branch> getBranches(Object projectIdOrPath, String search) throws GitLabApiException {
+        return (getBranches(projectIdOrPath, search, getDefaultPerPage()).all());
+    }
+
+    /**
+     * Get a Pager of repository branches from a project, sorted by name alphabetically, filter by the search term.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/branches?search=:search</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param search the branch name search term
+     * @param itemsPerPage the number of Project instances that will be fetched per page
+     * @return the list of repository branches for the specified project ID and search term
+     *
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Pager<Branch> getBranches(Object projectIdOrPath, String search, int itemsPerPage) throws GitLabApiException {
+        MultivaluedMap<String, String> queryParams = ( search == null ? null :
+            new GitLabApiForm().withParam("search", urlEncode(search)).asMap() );
+
+        return (new Pager<Branch>(this, Branch.class, itemsPerPage, queryParams, "projects",
+                getProjectIdOrPath(projectIdOrPath), "repository", "branches"));
+    }
+
+    /**
+     * Get a Stream of repository branches from a project, sorted by name alphabetically, filter by the search term.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/branches?search=:search</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param search the branch name search term
+     * @return the Stream of repository branches for the specified project ID and search term
+     *
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Stream<Branch> getBranchesStream(Object projectIdOrPath, String search) throws GitLabApiException {
+        return (getBranches(projectIdOrPath, search, getDefaultPerPage()).stream());
     }
 
     /**
@@ -222,7 +276,7 @@ public class RepositoryApi extends AbstractApi {
     }
 
     /**
-     * Get a list of repository files and directories in a project.
+     * Get a Stream of repository files and directories in a project.
      *
      * <pre><code>GitLab Endpoint: GET /projects/:id/repository/tree</code></pre>
      *
@@ -335,7 +389,7 @@ public class RepositoryApi extends AbstractApi {
         Form formData = new GitLabApiForm()
                 .withParam("id", getProjectIdOrPath(projectIdOrPath), true)
                 .withParam("path", filePath, false)
-                .withParam(isApiVersion(ApiVersion.V3) ? "ref_name" : "ref", refName, false)
+                .withParam(isApiVersion(ApiVersion.V3) ? "ref_name" : "ref", (refName != null ? urlEncode(refName) : null), false)
                 .withParam("recursive", recursive, false);
         return (new Pager<TreeItem>(this, TreeItem.class, itemsPerPage, formData.asMap(), "projects",
                 getProjectIdOrPath(projectIdOrPath), "repository", "tree"));
@@ -391,7 +445,7 @@ public class RepositoryApi extends AbstractApi {
      */
     public InputStream getRepositoryArchive(Object projectIdOrPath, String sha) throws GitLabApiException {
         Form formData = new GitLabApiForm().withParam("sha", sha);
-        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.MEDIA_TYPE_WILDCARD,
+        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.WILDCARD,
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "archive");
         return (response.readEntity(InputStream.class));
     }
@@ -437,7 +491,7 @@ public class RepositoryApi extends AbstractApi {
          *         https://gitlab.com/gitlab-com/support-forum/issues/3067
          */
         Form formData = new GitLabApiForm().withParam("sha", sha);
-        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.MEDIA_TYPE_WILDCARD,
+        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.WILDCARD,
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "archive" + "." + format.toString());
         return (response.readEntity(InputStream.class));
     }
@@ -457,7 +511,7 @@ public class RepositoryApi extends AbstractApi {
     public File getRepositoryArchive(Object projectIdOrPath, String sha, File directory) throws GitLabApiException {
 
         Form formData = new GitLabApiForm().withParam("sha", sha);
-        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.MEDIA_TYPE_WILDCARD,
+        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.WILDCARD,
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "archive");
 
         try {
@@ -522,7 +576,7 @@ public class RepositoryApi extends AbstractApi {
          *         https://gitlab.com/gitlab-com/support-forum/issues/3067
          */
         Form formData = new GitLabApiForm().withParam("sha", sha);
-        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.MEDIA_TYPE_WILDCARD,
+        Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.WILDCARD,
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "archive" + "." + format.toString());
 
         try {
@@ -647,7 +701,17 @@ public class RepositoryApi extends AbstractApi {
      * @throws GitLabApiException if any exception occurs
      */
     public Commit getMergeBase(Object projectIdOrPath, List<String> refs) throws GitLabApiException {
-        GitLabApiForm queryParams = new GitLabApiForm().withParam("refs", refs, true);
+
+	if (refs == null || refs.size() < 2) {
+	    throw new RuntimeException("refs must conatin at least 2 refs");
+	}
+
+	List<String> encodedRefs = new ArrayList<>(refs.size());
+	for (String ref : refs) {
+	    encodedRefs.add(urlEncode(ref));
+	}
+
+        GitLabApiForm queryParams = new GitLabApiForm().withParam("refs", encodedRefs, true);
         Response response = get(Response.Status.OK, queryParams.asMap(), "projects",
                 getProjectIdOrPath(projectIdOrPath), "repository", "merge_base");
         return (response.readEntity(Commit.class));

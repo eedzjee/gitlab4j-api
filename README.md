@@ -15,6 +15,7 @@ GitLab4J&trade; API (gitlab4j-api) provides a full featured and easy to consume 
   * [Javadocs](#javadocs)<br/>
   * [Project Set Up](#project-set-up)<br/>
   * [Usage Examples](#usage-examples)<br/>
+  * [Setting Request Timeouts](#setting-request-timeouts)<br/>
   * [Connecting Through a Proxy Server](#connecting-through-a-proxy-server)<br/>
   * [GitLab API V3 and V4 Support](#gitLab-api-v3-and-v4-support)<br/>
   * [Logging of API Requests and Responses](#logging-of-api-requests-and-responses)<br/>
@@ -53,7 +54,7 @@ To utilize GitLab4J&trade; API in your Java project, simply add the following de
 ```java
 dependencies {
     ...
-    compile group: 'org.gitlab4j', name: 'gitlab4j-api', version: '4.14.15'
+    compile group: 'org.gitlab4j', name: 'gitlab4j-api', version: '4.15.7'
 }
 ```
 
@@ -64,7 +65,7 @@ dependencies {
 <dependency>
     <groupId>org.gitlab4j</groupId>
     <artifactId>gitlab4j-api</artifactId>
-    <version>4.14.15</version>
+    <version>4.15.7</version>
 </dependency>
 ```
 
@@ -101,6 +102,16 @@ gitLabApi.sudo("johndoe")
 
 // To turn off sudo mode
 gitLabApi.unsudo();
+```
+
+---
+### **Setting Request Timeouts**
+As of GitLab4J-API 4.14.21 support has been added for setting the conect and read timeouts for the API client:
+```java
+GitLabApi gitLabApi = new GitLabApi("http://your.gitlab.com", "YOUR_PERSONAL_ACCESS_TOKEN", proxyConfig);
+
+// Set the connect timeout to 1 second and the read timeout to 5 seconds
+gitLabApi.setRequestTimeout(1000, 5000);
 ```
 
 ---
@@ -187,7 +198,7 @@ As of GitLab4J-API 4.9.2, all GitLabJ-API methods that return a List result have
   
 
 **IMPORTANT**  
-The built-in methods that return a Stream do so using ___eager evaluation___, meaning all items are pre-fetched from the GitLab server and a Stream is returned which will stream those items.  **Eager evaluation does NOT support paralell reading of data from ther server, it does however allow for paralell processing of the Stream post data fetch.**
+The built-in methods that return a Stream do so using ___eager evaluation___, meaning all items are pre-fetched from the GitLab server and a Stream is returned which will stream those items.  **Eager evaluation does NOT support parallel reading of data from ther server, it does however allow for parallel processing of the Stream post data fetch.**
 
 To stream using ___lazy evaluation___, use the GitLab4J-API methods that return a ```Pager``` instance, and then call the ```lazyStream()``` method on the ```Pager``` instance to create a lazy evaluation Stream. The Stream utilizes the ```Pager``` instance to page through the available items. **A lazy Stream does NOT support parallel operations or skipping.** 
 
@@ -200,8 +211,8 @@ Stream<Project> projectStream = gitlabApi.getProjectApi().getProjectsStream();
 projectStream.map(Project::getName).forEach(name -> System.out.println(name));
 
 // Operate on the stream in parallel, this example sorts User instances by username
-// NOTE: Fetching of the users is not done in paralell,
-// only the sorting of the users is a paralell operation.
+// NOTE: Fetching of the users is not done in parallel,
+// only the sorting of the users is a parallel operation.
 Stream<User> stream = gitlabApi.getUserApi().getUsersStream();
 List<User> users = stream.parallel().sorted(comparing(User::getUsername)).collect(toList());
 ```
@@ -257,6 +268,7 @@ The following is a list of the available sub APIs along with a sample use of eac
 ---
 &nbsp;&nbsp;[ApplicationsApi](#applicationsapi)<br/>
 &nbsp;&nbsp;[ApplicationSettingsApi](#applicationsettingsapi)<br/>
+&nbsp;&nbsp;[AuditEventApi](#auditeventapi)<br/>
 &nbsp;&nbsp;[AwardEmojiApi](#awardemojiapi)<br/>
 &nbsp;&nbsp;[BoardsApi](#boardsapi)<br/>
 &nbsp;&nbsp;[CommitsApi](#commitsapi)<br/>
@@ -294,6 +306,7 @@ The following is a list of the available sub APIs along with a sample use of eac
 &nbsp;&nbsp;[SessionApi](#sessionapi)<br/>
 &nbsp;&nbsp;[SnippetsApi](#snippetsapi)<br/>
 &nbsp;&nbsp;[SystemHooksApi](#systemhooksapi)<br/>
+&nbsp;&nbsp;[TagsApi](#tagsapi)<br/>
 &nbsp;&nbsp;[TodosApi](#todosapi)<br/>
 &nbsp;&nbsp;[UserApi](#userapi)<br/>
 &nbsp;&nbsp;[WikisApi](#wikisapi)
@@ -312,6 +325,15 @@ gitLabApi.getApplicationsApi().createApplication("My OAUTH Application", "https/
 ```java
 // Get the current GitLab server application settings
 ApplicationSettings appSettings = gitLabApi.getApplicationSettingsApi().getAppliationSettings();
+```
+
+#### AuditEventApi
+```java
+// Get the current GitLab server audit events for entity
+// This uses the ISO8601 date utilities the in org.gitlab4j.api.utils.ISO8601 class
+Date since = ISO8601.toDate("2017-01-01T00:00:00Z");
+Date until = new Date(); // now
+List<AuditEvent> auditEvents = gitLabApi.getAuditEventApi().getAuditEvents(since, until, EntityType.USER, 1);
 ```
 
 #### AwardEmojiApi
@@ -500,7 +522,11 @@ List<Release> releases = gitLabApi.getReleasesApi().getReleases(projectId);
 #### RepositoryApi
 ```java
 // Get a list of repository branches from a project, sorted by name alphabetically
-List<Branch> branches = gitLabApi.getRepositoryApi().getBranches();
+List<Branch> branches = gitLabApi.getRepositoryApi().getBranches(projectId);
+```
+```java
+// Search repository branches from a project, by name
+List<Branch> branches = gitLabApi.getRepositoryApi().getBranches(projectId, searchTerm);
 ```
 
 #### RepositoryFileApi
@@ -554,6 +580,12 @@ List<Snippet> snippets = gitLabApi.getSnippetsApi().getSnippets();
 ```java
 // Get a list of installed system hooks
 List<SystemHook> hooks = gitLabApi.getSystemHooksApi().getSystemHooks();
+```
+
+#### TagsApi
+```java
+// Get a list of tags for the specified project ID
+List<Tag> tags = gitLabApi.getTagsApi().getTags(projectId);
 ```
 
 #### TodosApi

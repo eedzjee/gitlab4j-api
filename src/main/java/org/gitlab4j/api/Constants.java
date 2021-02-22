@@ -156,7 +156,7 @@ public interface Constants {
     /** Enum to use for ordering the results of getPipelines(). */
     public enum PipelineOrderBy {
 
-        ID, STATUS, REF, USER_ID;
+        ID, STATUS, REF, UPDATED_AT, USER_ID;
 
         private static JacksonJsonEnumHelper<PipelineOrderBy> enumHelper = new JacksonJsonEnumHelper<>(PipelineOrderBy.class);
 
@@ -466,7 +466,7 @@ public interface Constants {
 
         ISSUE, MILESTONE, MERGE_REQUEST, NOTE, PROJECT, SNIPPET, USER;
 
-        private static JacksonJsonEnumHelper<TargetType> enumHelper = new JacksonJsonEnumHelper<>(TargetType.class, true, true);
+        private static JacksonJsonEnumHelper<TargetType> enumHelper = new JacksonJsonEnumHelper<>(TargetType.class, true, false, true);
 
         @JsonCreator
         public static TargetType forValue(String value) {
@@ -803,4 +803,50 @@ public interface Constants {
             return (enumHelper.toString(this));
         }
     }
+
+    /** Enum to use for specifying the deploy token scope. */
+    public enum DeployTokenScope {
+        READ_REPOSITORY, READ_REGISTRY;
+
+        private static JacksonJsonEnumHelper<DeployTokenScope> enumHelper = new JacksonJsonEnumHelper<>(DeployTokenScope.class);
+
+        @JsonCreator
+        public static DeployTokenScope forValue(String value) {
+            return enumHelper.forValue(value);
+        }
+
+        @JsonValue
+        public String toValue() {
+            return (enumHelper.toString(this));
+        }
+
+        @Override
+        public String toString() {
+            return (enumHelper.toString(this));
+        }
+    }
+
+    /** Enum for the build_git_strategy of the project instance. */
+    enum BuildGitStrategy {
+
+        FETCH, CLONE;
+
+        private static JacksonJsonEnumHelper<BuildGitStrategy> enumHelper = new JacksonJsonEnumHelper<>(BuildGitStrategy.class);
+
+        @JsonCreator
+        public static BuildGitStrategy forValue(String value) {
+            return enumHelper.forValue(value);
+        }
+
+        @JsonValue
+        public String toValue() {
+            return (enumHelper.toString(this));
+        }
+
+        @Override
+        public String toString() {
+            return (enumHelper.toString(this));
+        }
+    }
 }
+

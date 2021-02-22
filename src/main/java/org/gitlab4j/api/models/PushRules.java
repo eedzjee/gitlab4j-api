@@ -9,6 +9,7 @@ public class PushRules {
     private Integer id;
     private Integer projectId;
     private String commitMessageRegex;
+    private String commitMessageNegativeRegex;
     private String branchNameRegex;
     private Boolean denyDeleteTag;
     private Date createdAt;
@@ -17,6 +18,8 @@ public class PushRules {
     private String authorEmailRegex;
     private String fileNameRegex;
     private Integer maxFileSize;
+    private Boolean commitCommitterCheck;
+    private Boolean rejectUnsignedCommits;
 
     public Integer getId() {
         return id;
@@ -52,6 +55,18 @@ public class PushRules {
         return (this);
     }
 
+    public String getCommitMessageNegativeRegex() {
+        return commitMessageNegativeRegex;
+    }
+
+    public void setCommitMessageNegativeRegex(String commitMessageNegativeRegex) {
+        this.commitMessageNegativeRegex = commitMessageNegativeRegex;
+    }
+    
+    public PushRules withCommitMessageNegativeRegex(String commitMessageNegativeRegex) {
+        this.commitMessageNegativeRegex = commitMessageNegativeRegex;
+        return (this);
+    }
     public String getBranchNameRegex() {
         return branchNameRegex;
     }
@@ -148,6 +163,32 @@ public class PushRules {
     
     public PushRules withMaxFileSize(Integer maxFileSize) {
         this.maxFileSize = maxFileSize;
+        return (this);
+    }
+
+    public Boolean getCommitCommitterCheck() {
+        return commitCommitterCheck;
+    }
+
+    public void setCommitCommitterCheck(Boolean commitCommitterCheck) {
+        this.commitCommitterCheck = commitCommitterCheck;
+    }
+
+    public PushRules withCommitCommitterCheck(Boolean commitCommitterCheck) {
+        this.commitCommitterCheck = commitCommitterCheck;
+        return (this);
+    }
+
+    public Boolean getRejectUnsignedCommits() {
+        return rejectUnsignedCommits;
+    }
+
+    public void setRejectUnsignedCommits(Boolean rejectUnsignedCommits) {
+        this.rejectUnsignedCommits = rejectUnsignedCommits;
+    }
+
+    public PushRules withRejectUnsignedCommits(Boolean rejectUnsignedCommits) {
+        this.rejectUnsignedCommits = rejectUnsignedCommits;
         return (this);
     }
 

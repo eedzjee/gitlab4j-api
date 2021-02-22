@@ -5,13 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.gitlab4j.api.GitLabApi.ApiVersion;
+import org.gitlab4j.api.models.Blame;
 import org.gitlab4j.api.models.RepositoryFile;
 
 /**
@@ -61,7 +64,7 @@ public class RepositoryFileApi extends AbstractApi {
     public RepositoryFile getFileInfo(Object projectIdOrPath, String filePath, String ref) throws GitLabApiException {
 
         Form form = new Form();
-        addFormParam(form, "ref", ref, true);
+        addFormParam(form, "ref", (ref != null ? urlEncode(ref) : null), true);
         Response response = head(Response.Status.OK, form.asMap(),
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "files", urlEncode(filePath));
 
@@ -162,7 +165,7 @@ public class RepositoryFileApi extends AbstractApi {
         }
 
         Form form = new Form();
-        addFormParam(form, "ref", ref, true);
+        addFormParam(form, "ref", (ref != null ? urlEncode(ref) : null), true);
         Response response = get(Response.Status.OK, form.asMap(), "projects", getProjectIdOrPath(projectIdOrPath), "repository", "files", urlEncode(filePath));
         return (response.readEntity(RepositoryFile.class));
     }
@@ -325,7 +328,8 @@ public class RepositoryFileApi extends AbstractApi {
         }
 
         Form form = new Form();
-        addFormParam(form, isApiVersion(ApiVersion.V3) ? "branch_name" : "branch", branchName, true);
+        addFormParam(form, isApiVersion(ApiVersion.V3) ? "branch_name" : "branch",
+                (branchName != null ? urlEncode(branchName) : null), true);
         addFormParam(form, "commit_message", commitMessage, true);
         Response.Status expectedStatus = (isApiVersion(ApiVersion.V3) ? Response.Status.OK : Response.Status.NO_CONTENT);
 
@@ -411,20 +415,19 @@ public class RepositoryFileApi extends AbstractApi {
      * <pre><code>GitLab Endpoint: GET /projects/:id/repository/files/:filepath</code></pre>
      *
      * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
-     * @param commitOrBranchName the commit or branch name to get the file contents for
+     * @param ref the commit or branch name to get the file contents for
      * @param filepath the path of the file to get
      * @return an InputStream to read the raw file from
      * @throws GitLabApiException if any exception occurs
      */
-    public InputStream getRawFile(Object projectIdOrPath, String commitOrBranchName, String filepath) throws GitLabApiException {
+    public InputStream getRawFile(Object projectIdOrPath, String ref, String filepath) throws GitLabApiException {
 
+	Form formData = new GitLabApiForm().withParam("ref", (ref != null ? ref : null), true);
         if (isApiVersion(ApiVersion.V3)) {
-            Form formData = new GitLabApiForm().withParam("file_path", filepath, true);
             Response response = getWithAccepts(Response.Status.OK, formData.asMap(), MediaType.MEDIA_TYPE_WILDCARD,
-                "projects", getProjectIdOrPath(projectIdOrPath), "repository", "blobs", commitOrBranchName);
+                "projects", getProjectIdOrPath(projectIdOrPath), "repository", "blobs", ref);
             return (response.readEntity(InputStream.class));
         } else {
-            Form formData = new GitLabApiForm().withParam("ref", commitOrBranchName, true);
             Response response = getWithAccepts(Response.Status.OK, formData.asMap(),  MediaType.MEDIA_TYPE_WILDCARD,
                 "projects", getProjectIdOrPath(projectIdOrPath), "repository", "files", urlEncode(filepath), "raw");
             return (response.readEntity(InputStream.class));
@@ -460,5 +463,56 @@ public class RepositoryFileApi extends AbstractApi {
 
         addFormParam(form, "commit_message", commitMessage, true);
         return (form);
+    }
+
+    /**
+     * Get a List of file blame from repository.  Allows you to receive blame information.
+     * Each blame range contains lines and corresponding commit information.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/files/:file_path/blame</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param filePath the path of the file to get the blame for
+     * @param ref the name of branch, tag or commit
+     * @return a List of Blame instances for the specified filePath and ref
+     * @throws GitLabApiException if any exception occurs
+     */
+    public List<Blame> getBlame(Object projectIdOrPath, String filePath, String ref) throws GitLabApiException {
+       return (getBlame(projectIdOrPath, filePath, ref, getDefaultPerPage()).all());
+    }
+
+    /**
+     * Get a Pager of file blame from repository.  Allows you to receive blame information.
+     * Each blame range contains lines and corresponding commit information.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/files/:file_path/blame</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param filePath the path of the file to get the blame for
+     * @param ref the name of branch, tag or commit
+     * @param itemsPerPage the number of Project instances that will be fetched per page
+     * @return a Pager of Blame instances for the specified filePath and ref
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Pager<Blame> getBlame(Object projectIdOrPath, String filePath, String ref, int itemsPerPage) throws GitLabApiException {
+	GitLabApiForm formData = new GitLabApiForm().withParam("ref", ref, true);
+        return (new Pager<Blame>(this, Blame.class, itemsPerPage, formData.asMap(),
+                "projects",  getProjectIdOrPath(projectIdOrPath), "repository", "files", urlEncode(filePath), "blame"));
+    }
+
+    /**
+     * Get a Stream of file blame from repository.  Allows you to receive blame information.
+     * Each blame range contains lines and corresponding commit information.
+     *
+     * <pre><code>GitLab Endpoint: GET /projects/:id/repository/files/:file_path/blame</code></pre>
+     *
+     * @param projectIdOrPath the project in the form of an Integer(ID), String(path), or Project instance
+     * @param filePath the path of the file to get the blame for
+     * @param ref the name of branch, tag or commit
+     * @return a Stream of Blame instances for the specified filePath and ref
+     * @throws GitLabApiException if any exception occurs
+     */
+    public Stream<Blame> getBlameStream(Object projectIdOrPath, String filePath, String ref) throws GitLabApiException {
+       return (getBlame(projectIdOrPath, filePath, ref, getDefaultPerPage()).stream());
     }
 }
