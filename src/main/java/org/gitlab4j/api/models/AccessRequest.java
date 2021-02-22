@@ -4,8 +4,17 @@ import java.util.Date;
 
 public class AccessRequest extends AbstractUser<AccessRequest> {
 
+    private Date createdAt;
     private Date requestedAt;
     private AccessLevel accessLevel;
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public Date getRequestedAt() {
         return requestedAt;

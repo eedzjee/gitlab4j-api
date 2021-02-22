@@ -93,8 +93,7 @@
       "timestamp": "2015-04-08T21:00:25Z",
       "url": "http://example.com/gitlab-org/gitlab-test/commit/562e173be03b8ff2efb05345d12df18815438a4b",
       "author": {
-        "name": "John Smith",
-        "email": "john@example.com"
+        "name": "John Smith"
       }
     },
     "work_in_progress": false,

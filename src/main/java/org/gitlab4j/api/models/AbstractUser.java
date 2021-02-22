@@ -1,21 +1,16 @@
 package org.gitlab4j.api.models;
 
-import java.util.Date;
-
-import org.gitlab4j.api.utils.JacksonJson;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.gitlab4j.api.utils.JacksonJson;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class AbstractUser<U extends AbstractUser<U>> {
 
-    private String avatarUrl;
-    private Date createdAt;
-    private String email;
     private Integer id;
     private String name;
-    private String state;
     private String username;
+    private String state;
+    private String avatarUrl;
     private String webUrl;
 
     public String getAvatarUrl() {
@@ -24,22 +19,6 @@ public abstract class AbstractUser<U extends AbstractUser<U>> {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public Integer getId() {
@@ -85,18 +64,6 @@ public abstract class AbstractUser<U extends AbstractUser<U>> {
     @SuppressWarnings("unchecked")
     public U withAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
-        return (U)this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public U withCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-        return (U)this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public U withEmail(String email) {
-        this.email = email;
         return (U)this;
     }
 

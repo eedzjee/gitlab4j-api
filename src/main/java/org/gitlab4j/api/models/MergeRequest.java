@@ -1,12 +1,11 @@
 package org.gitlab4j.api.models;
 
-import java.util.Date;
-import java.util.List;
-
-import org.gitlab4j.api.utils.JacksonJson;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.gitlab4j.api.utils.JacksonJson;
+
+import java.util.Date;
+import java.util.List;
 
 public class MergeRequest {
 
@@ -15,6 +14,8 @@ public class MergeRequest {
     private Integer approvalsBeforeMerge;
     private Assignee assignee;
     private List<Assignee> assignees;
+    private Reviewer reviewer;
+    private List<Reviewer> reviewers;
     private Author author;
     private Boolean blockingDiscussionsResolved;
     private List<Diff> changes;
@@ -108,6 +109,22 @@ public class MergeRequest {
 
     public void setAssignees(List<Assignee> assignees) {
         this.assignees = assignees;
+    }
+
+    public Reviewer getReviewer() {
+        return reviewer;
+    }
+
+    public void setReviewer(Reviewer reviewer) {
+        this.reviewer = reviewer;
+    }
+
+    public List<Reviewer> getReviewers() {
+        return reviewers;
+    }
+
+    public void setReviewers(List<Reviewer> reviewers) {
+        this.reviewers = reviewers;
     }
 
     public Author getAuthor() {

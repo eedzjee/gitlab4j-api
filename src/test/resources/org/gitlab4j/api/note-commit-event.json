@@ -56,8 +56,7 @@
     "timestamp": "2014-02-27T10:06:20Z",
     "url": "http://example.com/gitlab-org/gitlab-test/commit/cfe32cf61b73a0d5e9f13e774abde7ff789b1660",
     "author": {
-      "name": "Dmitriy Zaporozhets",
-      "email": "dmitriy.zaporozhets@gmail.com"
+      "name": "Dmitriy Zaporozhets"
     }
   }
 }

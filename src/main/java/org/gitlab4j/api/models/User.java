@@ -1,16 +1,18 @@
 package org.gitlab4j.api.models;
 
+import org.gitlab4j.api.utils.JacksonJson;
+
 import java.util.Date;
 import java.util.List;
-
-import org.gitlab4j.api.utils.JacksonJson;
 
 public class User extends AbstractUser<User> {
 
     private String bio;
+    private String email;
     private Boolean canCreateGroup;
     private Boolean canCreateProject;
     private Integer colorSchemeId;
+    private Date createdAt;
     private Date confirmedAt;
     private Date currentSignInAt;
     private List<CustomAttribute> customAttributes;
@@ -45,6 +47,14 @@ public class User extends AbstractUser<User> {
         this.bio = bio;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public Boolean getCanCreateGroup() {
         return canCreateGroup;
     }
@@ -75,6 +85,14 @@ public class User extends AbstractUser<User> {
 
     public void setConfirmedAt(Date confirmedAt) {
         this.confirmedAt = confirmedAt;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Date getCurrentSignInAt() {
@@ -274,6 +292,11 @@ public class User extends AbstractUser<User> {
         return this;
     }
 
+    public User withEmail(String email) {
+        this.email = email;
+        return this;
+    }
+
     public User withCanCreateGroup(Boolean canCreateGroup) {
         this.canCreateGroup = canCreateGroup;
         return this;
@@ -286,6 +309,11 @@ public class User extends AbstractUser<User> {
 
     public User withColorSchemeId(Integer colorSchemeId) {
         this.colorSchemeId = colorSchemeId;
+        return this;
+    }
+
+    public User withCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
         return this;
     }
 

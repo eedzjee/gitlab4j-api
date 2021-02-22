@@ -6,9 +6,18 @@ package org.gitlab4j.api.models;
  */
 public class Contributor extends AbstractUser<Contributor> {
 
+    private String email;
     private Integer commits;
     private Integer additions;
     private Integer deletions;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public Integer getCommits() {
         return commits;

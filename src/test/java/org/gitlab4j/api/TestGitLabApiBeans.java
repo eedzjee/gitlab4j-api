@@ -23,16 +23,7 @@
 
 package org.gitlab4j.api;
 
-import static org.gitlab4j.api.JsonUtils.compareJson;
-import static org.gitlab4j.api.JsonUtils.readTreeFromResource;
-import static org.gitlab4j.api.JsonUtils.unmarshalResource;
-import static org.gitlab4j.api.JsonUtils.unmarshalResourceList;
-import static org.gitlab4j.api.JsonUtils.unmarshalResourceMap;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import org.gitlab4j.api.models.AccessRequest;
 import org.gitlab4j.api.models.Application;
 import org.gitlab4j.api.models.ApplicationSettings;
@@ -83,6 +74,7 @@ import org.gitlab4j.api.models.Note;
 import org.gitlab4j.api.models.NotificationSettings;
 import org.gitlab4j.api.models.OauthTokenResponse;
 import org.gitlab4j.api.models.Package;
+import org.gitlab4j.api.models.Package;
 import org.gitlab4j.api.models.PackageFile;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineSchedule;
@@ -114,7 +106,11 @@ import org.gitlab4j.api.services.JiraService;
 import org.gitlab4j.api.services.SlackService;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
+import java.util.Map;
+
+import static org.gitlab4j.api.JsonUtils.*;
+import static org.junit.Assert.assertTrue;
 
 public class TestGitLabApiBeans {
 
@@ -214,7 +210,7 @@ public class TestGitLabApiBeans {
 
     @Test
     public void testDeployment() throws Exception {
-	Deployment deployment = unmarshalResource(Deployment.class, "deployment.json");
+        Deployment deployment = unmarshalResource(Deployment.class, "deployment.json");
         assertTrue(compareJson(deployment, "deployment.json"));
     }
 

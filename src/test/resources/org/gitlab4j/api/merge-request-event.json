@@ -78,8 +78,7 @@
       "timestamp": "2012-01-03T23:36:29Z",
       "url": "http://example.com/awesome_space/awesome_project/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
       "author": {
-        "name": "GitLab dev user",
-        "email": "gitlabdev@dv6700.(none)"
+        "name": "GitLab dev user"
       }
     },
     "work_in_progress": false,

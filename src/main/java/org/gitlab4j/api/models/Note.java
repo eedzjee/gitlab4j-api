@@ -1,12 +1,11 @@
 package org.gitlab4j.api.models;
 
-import java.util.Date;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.gitlab4j.api.utils.JacksonJson;
 import org.gitlab4j.api.utils.JacksonJsonEnumHelper;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Date;
 
 public class Note {
 
@@ -77,7 +76,7 @@ public class Note {
     }
 
     private String attachment;
-    private Author author;
+    private NoteAuthor author;
     private String body;
     private Date createdAt;
     private Boolean downvote;
@@ -109,11 +108,11 @@ public class Note {
         this.attachment = attachment;
     }
 
-    public Author getAuthor() {
+    public NoteAuthor getAuthor() {
         return author;
     }
 
-    public void setAuthor(Author author) {
+    public void setAuthor(NoteAuthor author) {
         this.author = author;
     }
 

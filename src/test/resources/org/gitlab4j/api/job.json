@@ -49,8 +49,7 @@
       "username": "root",
       "web_url": "http://gitlab.dev/root",
       "website_url": ""
-    }
-    ,
+    },
     "project": {
       "id": 3,
       "name": "Diaspora Project Site",

@@ -46,8 +46,7 @@
       "timestamp": "2016-08-12T17:23:21Z",
       "url": "http://example.com/gitlab-org/gitlab-test/commit/bcbb5ec396a2c0f828686f14fac9b80b780504f2",
       "author":{
-         "name": "User",
-         "email": "user@gitlab.com"
+         "name": "User"
       }
    },
    "jobs":[
